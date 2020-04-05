@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const APIServer_1 = __importDefault(require("./APIServer"));
+const debugger_1 = require("./debug/debugger");
 const server = new APIServer_1.default();
 class APIRoutes {
     indexRoute(req, res) {
@@ -21,19 +22,57 @@ class APIRoutes {
             lastName: "Ali",
         };
     }
+    peopelRoute() {
+        let test = "testing 124";
+        console.log("");
+        return {
+            Poeple: [
+                {
+                    firstname: "Takmeela",
+                    lastName: "Ali",
+                },
+                {
+                    firstName: "Haniya",
+                    lastName: "Ali",
+                },
+            ],
+        };
+    }
 }
 __decorate([
     route("get", "/api"),
+    debugger_1.logRoute(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
 ], APIRoutes.prototype, "indexRoute", null);
+__decorate([
+    route("get", "/poeple"),
+    authenticate("12345"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], APIRoutes.prototype, "peopelRoute", null);
 function route(method, path) {
     return function (target, propertyKey, decriptor) {
         server.app[method](path, (req, res) => {
-            console.log(decriptor);
+            console.log(decriptor.value);
             res.status(200).json(decriptor.value(req, res));
         });
+    };
+}
+function authenticate(key) {
+    return function (target, propertyKey, decriptor) {
+        const original = decriptor.value;
+        decriptor.value = function (...args) {
+            const req = args[0];
+            const res = args[1];
+            const headers = req.headers;
+            if (headers.hasOwnProperty("apikey") && headers.apikey == key) {
+                return original.apply(this, args);
+            }
+            res.status(403).json({ error: "Not Authorized" });
+        };
     };
 }
 server.start();
