@@ -1,60 +1,30 @@
-function logClass(message: string): ClassDecorator {
-  console.log(`${message} evaluated`);
+import APIServer from "./APIServer";
+import { Request, Response } from "express";
+import { Server } from "http";
 
-  return function (constructor: Function): void {
-    console.log(`${message} Called`);
-  };
-}
+const server = new APIServer();
 
-function logProperty(message: string): PropertyDecorator {
-  console.log(`${message} evaluated`);
-  return function (target: Object, propertyKey: string): void {
-    console.log(`${message} Called`);
-  };
-}
-
-function logMethod(message: string): MethodDecorator {
-  console.log(`${message} evaluated`);
-
-  return function (
-    target: Object,
-    propertyKey: string,
-    descriptor: PropertyDescriptor
-  ): void {
-    console.log(`${message} evaluated`);
-  };
-}
-
-function logParameter(message: string): ParameterDecorator {
-  console.log(`${message} evaluated`);
-  return function (
-    target: Object,
-    propertyKey: string,
-    parameterIndex: number
-  ): void {
-    console.log(`${message}   called`);
-  };
-}
-
-@logClass("Class Decorator")
-class Person {
-  private _directReports: Person[];
-
-  @logProperty("Property Decortor")
-  public emailAddress: string;
-  constructor(public firstName: string, public lastName: string) {
-    this._directReports = [];
-  }
-
-  /**
-   * addDirectreports
-   */
-
-  @logMethod("Method Decorator")
-  @logMethod("Method Decorator two")
-  public addDirectreports(@logParameter("Parameter Decorator") person: Person) {
-    this._directReports.push(person);
+class APIRoutes {
+  @route("get", "/api")
+  public indexRoute(req: Request, res: Response) {
+    return {
+      firstName: "Usman",
+      lastName: "Ali",
+    };
   }
 }
 
-const person = new Person("Usman", "Ali");
+function route(method: string, path: string): MethodDecorator {
+  return function (
+    target: any,
+    propertyKey: string,
+    decriptor: PropertyDescriptor
+  ) {
+    server.app[method](path, (req: Request, res: Response) => {
+      console.log(decriptor);
+      res.status(200).json(decriptor.value(req, res));
+    });
+  };
+}
+
+server.start();
